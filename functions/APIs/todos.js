@@ -70,3 +70,23 @@ exports.deleteOneTodo = (req, resp) => {
       return resp.status(500).json({ error: err.code });
     });
 };
+
+exports.editTodo = (req, resp) => {
+  if (req.body.todoId || req.body.createdAt) {
+    resp.status(403).json({ message: "Invalid field to edit!" });
+  }
+
+  const doc = db.doc(`/todos/${req.params.todoId}`);
+
+  doc
+    .update(req.body)
+    .then(() => {
+      resp.json({ message: "Updated successfully" });
+    })
+    .catch(err => {
+      console.error(err);
+      return resp.status(500).json({
+        error: err.code
+      });
+    });
+};
