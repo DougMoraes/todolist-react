@@ -51,3 +51,22 @@ exports.postOneTodo = (req, resp) => {
       console.log(err);
     });
 };
+
+exports.deleteOneTodo = (req, resp) => {
+  const doc = db.doc(`/todos/${req.params.todoId}`);
+
+  doc
+    .get()
+    .then(result => {
+      return !result.exists
+        ? resp.status(404).json({ error: "Todo not found" })
+        : doc.delete();
+    })
+    .then(() => {
+      resp.json({ message: "Delete successful!" });
+    })
+    .catch(err => {
+      console.error(err);
+      return resp.status(500).json({ error: err.code });
+    });
+};
