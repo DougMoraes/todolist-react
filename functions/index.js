@@ -6,9 +6,10 @@ const {
   deleteOneTodo,
   editTodo
 } = require("./APIs/todos");
-const { loginUser } = require("./APIs/users");
+const { loginUser, signUpUser } = require("./APIs/users");
 
 app.post("/login", loginUser);
+app.post("/signup", signUpUser);
 
 app.get("/todos", getAllTodos);
 app.post("/todo", postOneTodo);
