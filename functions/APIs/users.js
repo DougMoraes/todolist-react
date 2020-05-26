@@ -1,5 +1,5 @@
 const firebase = require("firebase");
-const { db } = require("../util/admin");
+const { admin, db } = require("../util/admin");
 const config = require("../util/config");
 const { validateLoginData, validateSignUpData } = require("../util/validators");
 
@@ -20,8 +20,8 @@ exports.loginUser = (req, resp) => {
     .signInWithEmailAndPassword(user.email, user.password)
     .then(data => data.user.getIdToken())
     .then(token => resp.json({ token }))
-    .catch(error => {
-      console.error(error);
+    .catch(err => {
+      console.error(err);
       return resp
         .status(403)
         .json({ general: "Wrong combination of user and password!" });
@@ -79,9 +79,68 @@ exports.signUpUser = (req, resp) => {
     })
     .then(() => response.status(201).json({ token }))
     .catch(err => {
-      console.log(err);
+      console.error(err);
       err.code === "auth/email-already-in-use" ?
         response.status(400).json({ email: 'Email already in use' }) :
         response.status(500).json({ general: 'Something went wrong, please try again' })
     })
 };
+
+deleteImage = imageName => {
+  const bucket = admin.storage().bucket();
+  const path = `${imageName}`;
+
+  return bucket.file(path).delete().then(() => { }).catch(err => { }) //if this doenst work search for it you deleted a part that seems useles
+}
+
+exports.uploadProfilePhoto = (req, resp) => {
+  const BusBoy = require('busboy');
+  const path = require('path');
+  const os = require('os');
+  const fs = require('fs');
+  const busboy = new BusBoy({ headers: req.headers });
+
+  let imageFileName;
+  let imageToBeUploaded = {};
+
+  busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+    if (mimetype !== 'image/png' && mimetype !== 'image/jpeg') {
+      return resp.status(400).json({ error: 'Wrong file type submited' });
+    }
+
+    const imageExtension = filename.split('.')[filename.split('.').length - 1];
+    imageFileName = `${req.user.username}.${imageExtension}`;
+    const filePath = path.join(os.tmpdir(), imageFileName);
+    imageToBeUploaded = { filePath, mimetype };
+    file.pipe(fs.createWriteStream(filePath));
+  });
+
+  deleteImage(imageFileName);
+
+  busboy.on('finish', () => {
+    admin.storage().bucket().upload(imageToBeUploaded.filePath, {
+      resumable: false,
+      metadata: {
+        metadata: {
+          contentType: imageToBeUploaded.mimetype
+        }
+      }
+    })
+      .then(() => {
+        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+
+        return db.doc(`/users/${req.user.username}`).update({
+          imageUrl
+        });
+      })
+      .then(() => {
+        return resp.json({ message: 'Image uploaded successfully' });
+      })
+      .catch(err => {
+        console.error(err);
+        return resp.status(500).json({ error: err.code })
+      })
+  });
+
+  busboy.end(req.rawBody);
+}
