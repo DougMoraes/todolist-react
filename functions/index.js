@@ -7,11 +7,17 @@ const {
   deleteOneTodo,
   editTodo
 } = require("./APIs/todos");
-const { loginUser, signUpUser, uploadProfilePhoto } = require("./APIs/users");
+const {
+  getUserDetails,
+  loginUser,
+  signUpUser,
+  uploadProfilePhoto
+} = require("./APIs/users");
 
 app.post("/login", loginUser);
 app.post("/signup", signUpUser);
 app.post("/user/image", auth, uploadProfilePhoto);
+app.get("/user", auth, getUserDetails);
 
 app.get("/todos", getAllTodos);
 app.post("/todo", postOneTodo);
