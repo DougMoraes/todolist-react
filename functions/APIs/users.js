@@ -51,11 +51,11 @@ exports.signUpUser = (req, resp) => {
     .then(doc =>
       doc.exists
         ? response
-          .status(400)
-          .json({ username: "this username is already taken" })
+            .status(400)
+            .json({ username: "this username is already taken" })
         : firebase
-          .auth()
-          .createUserWithEmailAndPassword(newUser.email, newUser.password)
+            .auth()
+            .createUserWithEmailAndPassword(newUser.email, newUser.password)
     )
     .then(data => {
       userId = data.user.uid;
@@ -73,15 +73,34 @@ exports.signUpUser = (req, resp) => {
         email: newUser.email,
         createdAt: new Date().toISOString(),
         userId
-      }
+      };
 
       return db.doc(`/users/${newUser.username}`).set(userInfo);
     })
     .then(() => response.status(201).json({ token }))
     .catch(err => {
       console.log(err);
-      err.code === "auth/email-already-in-use" ?
-        response.status(400).json({ email: 'Email already in use' }) :
-        response.status(500).json({ general: 'Something went wrong, please try again' })
+      err.code === "auth/email-already-in-use"
+        ? response.status(400).json({ email: "Email already in use" })
+        : response
+            .status(500)
+            .json({ general: "Something went wrong, please try again" });
+    });
+};
+
+exports.getUserDetails = (req, resp) => {
+  let userData = {};
+
+  db.doc(`/users/${req.user.username}`)
+    .get()
+    .then(doc => {
+      if (doc.exists) {
+        userData.userCredentials = doc.data();
+        return resp.json(userData);
+      }
     })
+    .catch(err => {
+      console.log(error);
+      return resp.status(500).json({ error: err.code })
+    });
 };
