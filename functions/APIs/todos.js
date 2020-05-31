@@ -61,11 +61,11 @@ exports.deleteOneTodo = (req, resp) => {
     .get()
     .then(result => {
 
-      if (doc.data().username !== req.user.username) {
-        return resp.status(403).json({ error: "Unauthorized" })
+      if (!result.exists) {
+        return resp.status(404).json({ error: "Todo not found" });
       } else {
-        return !result.exists
-          ? resp.status(404).json({ error: "Todo not found" })
+        return result.data().username !== req.user.username
+          ? resp.status(403).json({ error: "Unauthorized" })
           : doc.delete();
       }
     })
