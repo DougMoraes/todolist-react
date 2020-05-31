@@ -36,6 +36,7 @@ exports.postOneTodo = (req, resp) => {
   const newTodoItem = {
     title: req.body.title,
     body: req.body.body,
+    username: req.user.username,
     createdAt: new Date().toISOString()
   };
 
