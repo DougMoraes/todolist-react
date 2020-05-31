@@ -21,9 +21,9 @@ app.post("/user/image", auth, uploadProfilePhoto);
 app.get("/user", auth, getUserDetails);
 app.post("/user", auth, updateUserDetails);
 
-app.get("/todos", getAllTodos);
-app.post("/todo", postOneTodo);
-app.delete("/todo/:todoId", deleteOneTodo);
-app.put("/todo/:todoId", editTodo);
+app.get("/todos", auth, getAllTodos);
+app.post("/todo", auth, postOneTodo);
+app.delete("/todo/:todoId", auth, deleteOneTodo);
+app.put("/todo/:todoId", auth, editTodo);
 
 exports.api = functions.https.onRequest(app);
