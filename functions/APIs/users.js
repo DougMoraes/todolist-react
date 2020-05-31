@@ -51,11 +51,11 @@ exports.signUpUser = (req, resp) => {
     .then(doc =>
       doc.exists
         ? response
-            .status(400)
-            .json({ username: "this username is already taken" })
+          .status(400)
+          .json({ username: "this username is already taken" })
         : firebase
-            .auth()
-            .createUserWithEmailAndPassword(newUser.email, newUser.password)
+          .auth()
+          .createUserWithEmailAndPassword(newUser.email, newUser.password)
     )
     .then(data => {
       userId = data.user.uid;
@@ -83,8 +83,8 @@ exports.signUpUser = (req, resp) => {
       err.code === "auth/email-already-in-use"
         ? response.status(400).json({ email: "Email already in use" })
         : response
-            .status(500)
-            .json({ general: "Something went wrong, please try again" });
+          .status(500)
+          .json({ general: "Something went wrong, please try again" });
     });
 };
 
@@ -108,6 +108,21 @@ exports.getUserDetails = (req, resp) => {
       return resp.status(500).json({ error: err.code })
     });
 };
+
+exports.updateUserDetails = (req, resp) => {
+  let document = db.collection('users').doc(`${req.user.username}`);
+  document.update(req.body)
+    .then(() => {
+      resp.json({ message: 'Updated successfully' })
+    })
+    .catch((err) => {
+      console.error(err);
+      return resp.status(500).json({
+        message: "Cannot Update the value"
+      });
+    });
+}
+
 
 deleteImage = imageName => {
   const bucket = admin.storage().bucket();
