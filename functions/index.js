@@ -3,6 +3,7 @@ const app = require("express")();
 const auth = require("./util/auth");
 const {
   getAllTodos,
+  getOneTodo,
   postOneTodo,
   deleteOneTodo,
   editTodo
@@ -23,6 +24,7 @@ app.post("/user", auth, updateUserDetails);
 
 app.get("/todos", auth, getAllTodos);
 app.post("/todo", auth, postOneTodo);
+app.get("/todo/:todoId", auth, getOneTodo);
 app.delete("/todo/:todoId", auth, deleteOneTodo);
 app.put("/todo/:todoId", auth, editTodo);
 
