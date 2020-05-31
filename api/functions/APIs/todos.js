@@ -2,6 +2,7 @@ const { db } = require("../util/admin");
 
 exports.getAllTodos = (req, resp) => {
   db.collection("todos")
+    .where('username', '==', req.user.username)
     .orderBy("createdAt", "desc")
     .get()
     .then(data => {
@@ -24,6 +25,30 @@ exports.getAllTodos = (req, resp) => {
     });
 };
 
+exports.getOneTodo = (req, resp) => {
+  const doc = db.doc(`/todos/${req.params.todoId}`);
+
+  doc
+    .get()
+    .then(result => {
+
+      if (!result.exists) {
+        return resp.status(404).json({ error: "Todo not found" });
+      } else {
+        return result.data().username !== req.user.username
+          ? resp.status(403).json({ error: "Unauthorized" })
+          : resp.json(result.data());
+      }
+    })
+    .then(() => {
+      resp.json({ message: "Delete successful!" });
+    })
+    .catch(err => {
+      console.error(err);
+      return resp.status(500).json({ error: err.code });
+    });
+}
+
 exports.postOneTodo = (req, resp) => {
   if (req.body.body.trim() === "") {
     return resp.status(400).json({ body: "Must not be empty" });
@@ -36,6 +61,7 @@ exports.postOneTodo = (req, resp) => {
   const newTodoItem = {
     title: req.body.title,
     body: req.body.body,
+    username: req.user.username,
     createdAt: new Date().toISOString()
   };
 
@@ -58,9 +84,14 @@ exports.deleteOneTodo = (req, resp) => {
   doc
     .get()
     .then(result => {
-      return !result.exists
-        ? resp.status(404).json({ error: "Todo not found" })
-        : doc.delete();
+
+      if (!result.exists) {
+        return resp.status(404).json({ error: "Todo not found" });
+      } else {
+        return result.data().username !== req.user.username
+          ? resp.status(403).json({ error: "Unauthorized" })
+          : doc.delete();
+      }
     })
     .then(() => {
       resp.json({ message: "Delete successful!" });
